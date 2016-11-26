@@ -4,6 +4,7 @@ namespace Silber\Bouncer\Database;
 
 use App\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Silber\Bouncer\Database\Constraints\Abilities as AbilitiesConstraint;
 
 class Role extends Model
@@ -13,7 +14,16 @@ class Role extends Model
      *
      * @var array
      */
+	 
+	use SoftDeletes;
+	 
     protected $fillable = ['name'];
+	
+	protected $appends = [
+		'abilities'
+    ];
+
+    protected $unassignedDate = ['deleted_at'];
 
     /**
      * {@inheritDoc}
@@ -62,5 +72,10 @@ class Role extends Model
     public function scopeWhereCan($query, $ability, $model = null)
     {
         (new AbilitiesConstraint)->constrainRoles($query, $ability, $model);
+    }
+	
+	public function getAbilitiesAttribute() {
+        $role = $this->find($this->id);
+        return $role->abilities()->pluck('name');
     }
 }
